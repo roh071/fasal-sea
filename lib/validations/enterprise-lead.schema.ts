@@ -13,6 +13,8 @@ export const enterpriseLeadSchema = z.object({
   landArea: z.enum(["50–499 ha", "500–999 ha", "1,000–4,999 ha", "5,000–49,999 ha", "50,000+ ha"] as const, {
     error: "Select land area",
   }),
+  region: z.string().optional(),
+  investmentRange: z.string().optional(),
   challenge: z.string().optional(),
   source: z.string().optional(),
   consent: z.literal(true, { error: "You must agree to be contacted" }),

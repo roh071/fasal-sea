@@ -25,8 +25,10 @@ export async function sendEnterpriseLeadEmail(data: Record<string, unknown>) {
           ${row("Job Title", String(data.jobTitle ?? ""))}
           ${row("Company", String(data.company ?? ""))}
           ${row("Country", String(data.country ?? ""))}
+          ${row("Region", String(data.region ?? "—"))}
           ${row("Crop(s)", crops)}
           ${row("Land Area", String(data.landArea ?? ""))}
+          ${row("Investment Range", String(data.investmentRange ?? "—"))}
           ${row("Challenge", String(data.challenge ?? "—"))}
           ${row("Source", String(data.source ?? "—"))}
           ${row("Submitted", new Date().toLocaleString("en-GB", { timeZone: "Asia/Singapore" }) + " SGT")}

@@ -1,4 +1,4 @@
-import type { DiscoveryInput, EmailGenInput } from "@/lib/validations/leads-tool.schema";
+import type { DiscoveryInput, EmailGenInput, DeepResearchInput } from "@/lib/validations/leads-tool.schema";
 
 export const SYSTEM_PROMPT = `You are Rohan's B2B lead intelligence assistant for Fasal, an Indian AgriTech company selling IoT crop-monitoring sensors (FasalOne) to large plantation companies in Malaysia and Philippines.
 
@@ -113,4 +113,53 @@ Output ONLY a JSON object with this exact structure:
 }
 
 Return ONLY the raw JSON object. No markdown, no code fences. Start with { and end with }.`;
+}
+
+export function buildDeepResearchPrompt(input: DeepResearchInput): string {
+  const regionClause = input.region ? ` in the ${input.region} region` : "";
+  const cropClause = input.crop ? ` that grow ${input.crop}` : " across all plantation crops";
+  const cropLabel = input.crop ?? "plantation crops";
+
+  return `You are a B2B market intelligence analyst. Research 8–10 real plantation companies in ${input.country}${regionClause}${cropClause} with a minimum of 1,000 ha under management.
+
+For each company, produce a deep research profile using all publicly available information: annual reports, sustainability reports, news articles, LinkedIn, industry databases, and plantation industry publications.
+
+Output ONLY a JSON array. Each element must exactly match this structure:
+{
+  "name": "Company full legal or trading name",
+  "country": "${input.country}",
+  "region": "Specific state/province/region if known, else 'Various' or '${input.country}'",
+  "icpScore": "High" | "Medium" | "Low",
+  "crops": ["Primary crop", "Other crops if known"],
+  "estimatedScale": "Total planted area estimate with source qualifier if uncertain",
+  "teamStructure": "Estimated field staff, management layers, agronomy team if known",
+  "productionCapacity": "Annual output estimate (MT/year or bunches/year) with qualifier",
+  "last5YearProduction": "Known production trend 2019–2024 or estimate with qualifier",
+  "next5YearPlan": "Known expansion plans, ESG targets, or strategic direction if publicly disclosed",
+  "budget": "Estimated annual agri-input or operational spend, or investment range if disclosed",
+  "investmentPlan": "Known precision ag, smart farming, or technology investment signals from public sources",
+  "currentChallenges": ["Challenge 1", "Challenge 2"],
+  "smartFarmingTech": "Known tech in use (e.g. Trimble GPS, variable rate irrigation, remote sensing) or 'None publicly known'",
+  "dripIrrigation": "Drip / flood / sprinkler / mixed / unknown — specify if known",
+  "farmStructure": "Single contiguous estate OR multiple scattered estates — number of locations if known",
+  "terrainSlope": "Flat coastal / Undulating / Hilly highland / Mixed — specify if known",
+  "farmerCount": "Estimated permanent + seasonal worker count if publicly available",
+  "keyContact": {
+    "name": "Full name of the most relevant agri/plantation decision-maker at this company — Head of Plantations, VP Estates, Head of Agronomy, Estate Manager, Director of Agriculture, Agronomy Manager, or Head of Operations. Do NOT use CEO, President, COO, or CFO unless no agri-specific role is publicly known. These are large plantation companies — an agronomy or estates lead almost always appears in annual reports, press releases, LinkedIn, or trade publications. Search hard before writing 'Not publicly available'.",
+    "designation": "Their exact job title",
+    "email": "Their professional email only if found in a public source (LinkedIn, website, press release) — else ''",
+    "phone": "Their direct or company phone number only if found in a public source — else ''"
+  },
+  "linkedinHint": "Exact search string for LinkedIn company search",
+  "fasalHook": "One specific sentence — why FasalOne solves a known challenge at THIS company, referencing their actual data"
+}
+
+ICP scoring rules:
+- High: 5,000+ ha, ${cropLabel} as primary crop, active ESG/sustainability programme, or known precision ag investments
+- Medium: 1,000–5,000 ha OR ${cropLabel} as secondary crop OR limited public information
+- Low: Mainly trader/processor, under 1,000 ha, or does not own its own plantations
+
+Use qualifiers ("reportedly", "estimated", "publicly listed — unconfirmed") when data is uncertain. Never invent statistics. For keyContact: the name and designation are almost always findable for companies of this size — check annual reports, company websites, LinkedIn, and news articles. Only leave name as 'Not publicly available' if you genuinely cannot find any named executive after a thorough search. Never fabricate emails or phone numbers.
+
+Return ONLY the raw JSON array. No markdown, no code fences. Start with [ and end with ].`;
 }

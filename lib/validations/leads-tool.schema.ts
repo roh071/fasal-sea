@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const COUNTRIES = ["Malaysia", "Philippines"] as const;
+export const COUNTRIES = ["Malaysia", "Philippines", "Indonesia", "Vietnam"] as const;
 export const CROPS = [
   "Palm Oil", "Banana", "Sugarcane", "Durian", "Rubber",
   "Coconut", "Cacao", "Coffee/Tea", "Pineapple", "Other",
@@ -33,5 +33,13 @@ export const emailGenSchema = z.object({
   painPoint: z.enum(PAIN_POINTS, { error: "Select a pain point" }),
 });
 
+export const deepResearchSchema = z.object({
+  country: z.enum(COUNTRIES, { error: "Select a country" }),
+  region: z.string().optional(),
+  crop: z.string().optional(),
+});
+
 export type DiscoveryInput = z.infer<typeof discoverySchema>;
 export type EmailGenInput = z.infer<typeof emailGenSchema>;
+export type DeepResearchInput = z.infer<typeof deepResearchSchema>;
+

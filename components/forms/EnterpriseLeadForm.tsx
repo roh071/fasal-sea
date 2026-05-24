@@ -14,6 +14,16 @@ import Link from "next/link";
 
 const CROPS = ["Palm Oil", "Banana", "Sugarcane", "Durian", "Rubber", "Coconut", "Cacao", "Coffee/Tea", "Pineapple", "Other"];
 
+const REGIONS: Record<string, string[]> = {
+  Malaysia: ["Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah", "Sarawak", "Selangor", "Terengganu", "Other"],
+  Philippines: ["Mindanao", "Visayas", "Luzon", "NCR (Metro Manila)", "Cordillera (CAR)", "Ilocos Region", "Cagayan Valley", "Bicol Region", "Western Visayas", "Eastern Visayas", "Zamboanga Peninsula", "Northern Mindanao", "Davao Region", "SOCCSKSARGEN", "Caraga", "BARMM", "Other"],
+  Indonesia: ["Sumatra", "Java", "Kalimantan", "Sulawesi", "Papua", "Bali & Nusa Tenggara", "Maluku", "Other"],
+  Vietnam: ["Northern Vietnam", "Central Vietnam", "Southern Vietnam", "Mekong Delta", "Central Highlands", "Other"],
+  Other: ["Other"],
+};
+
+const INVESTMENT_RANGES = ["$0 – $3,000", "$3,000 – $5,000", "$5,000 – $10,000", "$10,000 and above"];
+
 const SELECT_CLS = "w-full rounded-lg border border-[#e7e5e4] bg-white px-3 py-2.5 text-sm text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-[#16a34a] focus:border-transparent";
 
 export function EnterpriseLeadForm() {
@@ -33,6 +43,8 @@ export function EnterpriseLeadForm() {
   });
 
   const selectedCrops = watch("crops") ?? [];
+  const selectedCountry = watch("country");
+  const regionOptions = selectedCountry ? (REGIONS[selectedCountry] ?? REGIONS["Other"]) : [];
 
   function toggleCrop(crop: string) {
     const current = selectedCrops;
@@ -110,7 +122,7 @@ export function EnterpriseLeadForm() {
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="country" className="text-sm font-medium text-[#44403c] mb-1.5 block">Country *</Label>
-          <select id="country" {...register("country")} className={SELECT_CLS}>
+          <select id="country" {...register("country")} onChange={(e) => { register("country").onChange(e); setValue("region", ""); }} className={SELECT_CLS}>
             <option value="">Select country</option>
             {["Malaysia", "Philippines", "Indonesia", "Vietnam", "Other"].map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -118,6 +130,20 @@ export function EnterpriseLeadForm() {
           </select>
           {errors.country && <p className="text-xs text-red-500 mt-1">{errors.country.message}</p>}
         </div>
+        <div>
+          <Label htmlFor="region" className="text-sm font-medium text-[#44403c] mb-1.5 block">
+            Region <span className="text-[#78716c] font-normal">(optional)</span>
+          </Label>
+          <select id="region" {...register("region")} disabled={!selectedCountry} className={SELECT_CLS + (!selectedCountry ? " opacity-50 cursor-not-allowed" : "")}>
+            <option value="">Select region</option>
+            {regionOptions.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="landArea" className="text-sm font-medium text-[#44403c] mb-1.5 block">Farm / Estate Area *</Label>
           <select id="landArea" {...register("landArea")} className={SELECT_CLS}>
@@ -127,6 +153,17 @@ export function EnterpriseLeadForm() {
             ))}
           </select>
           {errors.landArea && <p className="text-xs text-red-500 mt-1">{errors.landArea.message}</p>}
+        </div>
+        <div>
+          <Label htmlFor="investmentRange" className="text-sm font-medium text-[#44403c] mb-1.5 block">
+            Investment Range <span className="text-[#78716c] font-normal">(optional)</span>
+          </Label>
+          <select id="investmentRange" {...register("investmentRange")} className={SELECT_CLS}>
+            <option value="">Select range</option>
+            {INVESTMENT_RANGES.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -1,10 +1,8 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { emailGenSchema } from "@/lib/validations/leads-tool.schema";
 import { buildEmailPrompt, SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { getAnthropicClient } from "@/lib/ai/client";
 import type { EmailPackResult } from "@/lib/ai/types";
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 function checkRateLimit(ip: string): boolean {
@@ -40,7 +38,7 @@ export async function POST(req: NextRequest) {
   const prompt = buildEmailPrompt(result.data);
 
   try {
-    const message = await anthropic.messages.create({
+    const message = await getAnthropicClient().messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 2000,
       system: SYSTEM_PROMPT,

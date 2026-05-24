@@ -1,9 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { discoverySchema } from "@/lib/validations/leads-tool.schema";
 import { buildDiscoveryPrompt, SYSTEM_PROMPT } from "@/lib/ai/prompts";
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+import { getAnthropicClient } from "@/lib/ai/client";
 
 // Simple in-memory rate limiter: 10 requests per IP per 60 seconds
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -50,7 +48,7 @@ export async function POST(req: NextRequest) {
       let objectStart = -1;
 
       try {
-        const anthropicStream = anthropic.messages.stream({
+        const anthropicStream = getAnthropicClient().messages.stream({
           model: "claude-sonnet-4-5",
           max_tokens: 4096,
           system: SYSTEM_PROMPT,

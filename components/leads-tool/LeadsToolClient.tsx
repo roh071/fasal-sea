@@ -6,12 +6,15 @@ import { DiscoveryForm } from "./discovery/DiscoveryForm";
 import { DiscoveryResults } from "./discovery/DiscoveryResults";
 import { EmailGeneratorForm } from "./email/EmailGeneratorForm";
 import { EmailResultPanel } from "./email/EmailResultPanel";
-import type { CompanyDiscoveryItem, EmailPackResult } from "@/lib/ai/types";
-import type { DiscoveryInput, EmailGenInput } from "@/lib/validations/leads-tool.schema";
+import { DeepResearchForm } from "./deep-research/DeepResearchForm";
+import { DeepResearchResults } from "./deep-research/DeepResearchResults";
+import type { CompanyDiscoveryItem, EmailPackResult, DeepResearchItem } from "@/lib/ai/types";
+import type { DiscoveryInput, EmailGenInput, DeepResearchInput } from "@/lib/validations/leads-tool.schema";
 
 const TABS = [
   { id: "discovery", label: "Company Discovery" },
   { id: "email", label: "Email Generator" },
+  { id: "deep-research", label: "Deep Research" },
 ];
 
 export function LeadsToolClient() {
@@ -26,6 +29,12 @@ export function LeadsToolClient() {
   const [emailResult, setEmailResult] = useState<EmailPackResult | null>(null);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+
+  // Deep research state
+  const [deepResults, setDeepResults] = useState<DeepResearchItem[]>([]);
+  const [deepLoading, setDeepLoading] = useState(false);
+  const [deepStreaming, setDeepStreaming] = useState(false);
+  const [deepError, setDeepError] = useState<string | null>(null);
 
   async function handleDiscovery(data: DiscoveryInput) {
     setDiscoveryResults([]);
@@ -61,14 +70,9 @@ export function LeadsToolClient() {
           if (payload === "[DONE]") break;
           try {
             const item = JSON.parse(payload) as CompanyDiscoveryItem;
-            if ("error" in item) {
-              setDiscoveryError((item as { error: string }).error);
-              break;
-            }
+            if ("error" in item) { setDiscoveryError((item as { error: string }).error); break; }
             setDiscoveryResults((prev) => [...prev, item]);
-          } catch {
-            // malformed chunk — skip
-          }
+          } catch { /* skip malformed chunk */ }
         }
       }
     } catch (err) {
@@ -89,19 +93,61 @@ export function LeadsToolClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
       const json = await res.json();
-
-      if (!res.ok) {
-        setEmailError(json.error ?? "Something went wrong");
-        return;
-      }
-
+      if (!res.ok) { setEmailError(json.error ?? "Something went wrong"); return; }
       setEmailResult(json as EmailPackResult);
     } catch (err) {
       setEmailError(err instanceof Error ? err.message : "Network error");
     } finally {
       setEmailLoading(false);
+    }
+  }
+
+  async function handleDeepResearch(data: DeepResearchInput) {
+    setDeepResults([]);
+    setDeepError(null);
+    setDeepLoading(true);
+    setDeepStreaming(true);
+
+    try {
+      const res = await fetch("/api/ai/deep-research", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok || !res.body) {
+        const err = await res.json().catch(() => ({ error: "Request failed" }));
+        setDeepError(err.error ?? "Something went wrong");
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6).trim();
+          if (payload === "[DONE]") { setDeepStreaming(false); break; }
+          try {
+            const item = JSON.parse(payload) as DeepResearchItem;
+            if ("error" in item) { setDeepError((item as { error: string }).error); break; }
+            setDeepResults((prev) => [...prev, item]);
+          } catch { /* skip malformed chunk */ }
+        }
+      }
+    } catch (err) {
+      setDeepError(err instanceof Error ? err.message : "Network error");
+    } finally {
+      setDeepLoading(false);
+      setDeepStreaming(false);
     }
   }
 
@@ -130,6 +176,20 @@ export function LeadsToolClient() {
             </div>
           )}
           {emailResult && <EmailResultPanel result={emailResult} />}
+        </div>
+      )}
+
+      {activeTab === "deep-research" && (
+        <div>
+          <DeepResearchForm onSubmit={handleDeepResearch} loading={deepLoading} />
+          {deepError && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {deepError}
+            </div>
+          )}
+          <div className="mt-6">
+            <DeepResearchResults items={deepResults} streaming={deepStreaming} />
+          </div>
         </div>
       )}
     </div>

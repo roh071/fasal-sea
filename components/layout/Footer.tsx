@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Leaf, Mail } from "lucide-react";
+import Image from "next/image";
+import { Mail } from "lucide-react";
 
 const footerLinks = {
   Platform: [
@@ -23,10 +24,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl text-white mb-3">
-              <Leaf className="h-6 w-6 text-[#16a34a]" strokeWidth={2.5} />
-              <span>Fasal</span>
-              <span className="text-xs font-medium text-[#78716c] tracking-widest uppercase ml-1">SEA</span>
+            <Link href="/" className="inline-flex mb-3">
+              <Image src="/fasal-logo-cropped.png" alt="Fasal SEA" width={140} height={48} className="h-12 w-auto object-contain" />
             </Link>
             <p className="text-sm leading-relaxed mb-4">
               Crop intelligence for the farms that feed the world.

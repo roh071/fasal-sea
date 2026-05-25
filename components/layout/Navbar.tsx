@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Leaf } from "lucide-react";
+import Image from "next/image";
+import { Menu, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const links = [
@@ -19,10 +20,8 @@ export function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-[#1c1917]">
-            <Leaf className="h-6 w-6 text-[#16a34a]" strokeWidth={2.5} />
-            <span>Fasal</span>
-            <span className="text-xs font-medium text-[#78716c] tracking-widest uppercase ml-1 hidden sm:inline">SEA</span>
+          <Link href="/" className="flex items-center">
+            <Image src="/fasal-logo-cropped.png" alt="Fasal SEA" width={160} height={56} className="h-12 w-auto object-contain" priority />
           </Link>
 
           {/* Desktop nav */}
